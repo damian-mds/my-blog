@@ -8,6 +8,17 @@ const blogPosts = [
         canImprove: "Something that I had learnt was that if you are unsure of something the best thing to do is to ask someone else, since two heads are better than one. Asking my friends about whether or not they have potential problems in their day to day lives that they didn't have an immediate solution for helped me decide the topic for this brief", 
         nextSprint: "Going forward I will definitely be making use of the resources around me, particularly my peers as that has been helpful for me in what is arguably the most critical stage of the project.",
         tags: ["Research", "Development", "Ideating"]
+    },
+
+    {
+        id: 2,
+        title: "Week 02",
+        date: "15-05-2026",
+        wentWell: "The interviews with the potential demographics went well, with almost all participants agreeing that they face the issues addressed in the problem statement suggesting that there is indeed a demographic for the proposed solution.",
+        notWell: "Creating the WIP slideshow was probably the only part of this week that did not go well, I wasn't too sure how I wanted to layout or design my slides as well as how much information I wanted to include in the presentation.",
+        canImprove: "An aspect that I could improve on would be organising my thoughts and documenting them into FigJam, a lot of my thoughts and processes are still sitting in my head and in random markdown files on my computers which made it difficult to work between my two computers without doubling up on work.",
+        nextSprint: "I will be organising all my thoughts into just one place and updating my FigJam more regularly as it is still quite barren, my preference is to work with markdown files but I will need to switch or find a way to integrate that into my FigJam going forward.",
+        tags: ["Research", "Interviews", "Presentation"]
     }
 ];
 
