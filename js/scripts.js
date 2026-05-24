@@ -19,6 +19,17 @@ const blogPosts = [
         canImprove: "An aspect that I could improve on would be organising my thoughts and documenting them into FigJam, a lot of my thoughts and processes are still sitting in my head and in random markdown files on my computers which made it difficult to work between my two computers without doubling up on work.",
         nextSprint: "I will be organising all my thoughts into just one place and updating my FigJam more regularly as it is still quite barren, my preference is to work with markdown files but I will need to switch or find a way to integrate that into my FigJam going forward.",
         tags: ["Research", "Interviews", "Presentation"]
+    },
+
+    {
+        id: 3,
+        title: "Week 03",
+        date: "24-05-2026",
+        wentWell: "The aspect of the project that went well this week would be the (Mid-Fi?) prototyping of the app onboarding as well as the home page. My initial planning done in the previous weeks has definitely helped streamline the prototyping process as I could always refer back to the plan in case I wasn't sure how to implement something. Another aspect that went well was the documentation process of the prototyping into the FigJam.",
+        notWell: "Keeping a consistent work schedule was an aspect that did not go as well, a lot of the progress that I made on the project on the came in spontaneous bursts as opposed to consistent daily effort.",
+        canImprove: "Possibly keeping a more consistent work schedule would be something to work on in the coming weeks, apart from that everything else seems to be on track.",
+        nextSprint: "For the next sprint I will be working on turning the Mid-Fi prototype into a Hi-Fi prototype as well as the pitch presentation, looking at making a higher quality presentation for the pitch as well.",
+        tags: ["Prototyping", "Documentation", "Testing"]
     }
 ];
 
