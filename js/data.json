@@ -30,4 +30,16 @@
     "canImprove": "Possibly keeping a more consistent work schedule would be something to work on in the coming weeks, apart from that everything else seems to be on track.",
     "nextSprint": "For the next sprint I will be working on turning the Mid-Fi prototype into a Hi-Fi prototype as well as the pitch presentation, looking at making a higher quality presentation for the pitch as well.",
     "tags": ["Prototyping", "Documentation", "Testing"]
-  }]
+  }
+
+  {
+    "id": 4,
+    "title": "Week 04",
+    "date": "29-05-2026",
+    "wentWell": "An aspect that went well for the week was production of the pitch presentation due to heaps of planning done in the weeks prior with all the documentation compiled into markdown files in a directory. This really helped to streamline the process of writing the content of the slides as all I had to do was just reference the information.",
+    "notWell": "Something that I struggled with this week was getting anything other than the presentation done in regards to the whole assignment, I basically spent the entire week creating and refining the presentation. I wanted to try something new this time with the presentation and create the slides using html, css and js, to apply some of the learning done in class, but this became a huge time sink.",
+    "canImprove": "Possibly being a bit smarter with where I place my time in regards to the scope of the project would have been something that I could have improved on as I think I allowed a fun little side project turn into something bigger than it should have been.",
+    "nextSprint": "For the next sprint I would like to work on diversifying the parts of the project that I work on instead of hyperfixiating on just one part of the brief.",
+    "tags": ["Presentation", "Research", "Development"]
+  }
+]
