@@ -3,11 +3,11 @@
     TODO: Replace these two values with your own Supabase project credentials.
     Found in your project at:  https://app.supabase.com/project/<ID>/settings/api
 */
-const SUPABASE_URL  = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL  = 'https://tsrfpkccxkysbzdgbero.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_Pkirb2u25qSiPv-OE5u0fw_m9gQBcq-';
 
-// Create the Supabase client (global variable so index.html's script tag finds it)
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+// Create the Supabase client (uses window.__supabase from the module script above)
+const supabase = window.__supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 async function loadPosts() {
     // Fetch sprints
@@ -75,13 +75,13 @@ function generateBlogPosts(posts) {
             </header>
             <div class="post-content">
                 <p><b>What went well :D</b></p>
-                <p>${post.wentWell}</p><br>
+                <p>${post.went_well}</p><br>
                 <p><b>What didn't go well D:</b></p>
-                <p>${post.notWell}</p><br>
+                <p>${post.not_well}</p><br>
                 <p><b>What can be improved :exhale:</b></p>
-                <p>${post.canImprove}</p><br>
+                <p>${post.can_improve}</p><br>
                 <p><b>Next Actions</b></p>
-                <p>${post.nextSprint}</p>
+                <p>${post.next_sprint}</p>
             </div>
             <div class="post-tags">
                 ${tagElements}
