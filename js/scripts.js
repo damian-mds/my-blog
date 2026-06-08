@@ -1,11 +1,50 @@
-let blogPosts = [];
+/*  scripts.js  —  Supabase version (dev branch)
 
-fetch('js/data.json')
-    .then(res => res.json())
-    .then(data => {
-        blogPosts = data;
-        generateBlogPosts();
-    });
+    TODO: Replace these two values with your own Supabase project credentials.
+    Found in your project at:  https://app.supabase.com/project/<ID>/settings/api
+*/
+const SUPABASE_URL  = 'https://YOUR_PROJECT_ID.supabase.co';
+const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+
+// Create the Supabase client (global variable so index.html's script tag finds it)
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+async function loadPosts() {
+    // Fetch sprints
+    const { data: sprints, error: sprintsError } = await supabase
+        .from('sprints')
+        .select('*')
+        .order('id', { ascending: false });
+
+    if (sprintsError) {
+        console.error('Error fetching sprints:', sprintsError);
+        document.querySelector('.blog-posts').innerHTML =
+            '<p class="error">Failed to load blog posts. Check the console.</p>';
+        return;
+    }
+
+    // Fetch all tags
+    const { data: allTags, error: tagsError } = await supabase
+        .from('sprint_tags')
+        .select('*');
+
+    if (tagsError) {
+        console.error('Error fetching tags:', tagsError);
+        document.querySelector('.blog-posts').innerHTML =
+            '<p class="error">Failed to load blog tags. Check the console.</p>';
+        return;
+    }
+
+    // Merge tags into each sprint (same shape as the old data.json)
+    const posts = sprints.map(sprint => ({
+        ...sprint,
+        tags: allTags
+            .filter(t => t.sprint_id === sprint.id)
+            .map(t => t.tag)
+    }));
+
+    generateBlogPosts(posts);
+}
 
 function formatDate(dateString) {
     const [day, month, year] = dateString.split('-');
@@ -18,10 +57,10 @@ function formatDate(dateString) {
     return `${day} ${monthNames[parseInt(month) - 1]} ${year}`;
 }
 
-function generateBlogPosts() {
+function generateBlogPosts(posts) {
     const postsContainer = document.querySelector('.blog-posts');
     
-    [...blogPosts].reverse().forEach(post => {
+    posts.forEach(post => {
         const postElement = document.createElement('article');
         postElement.className = 'post';
         
@@ -51,3 +90,6 @@ function generateBlogPosts() {
         postsContainer.appendChild(postElement);
     });
 }
+
+// Start
+loadPosts();
