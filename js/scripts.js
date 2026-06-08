@@ -7,8 +7,8 @@
     and fall back to hardcoded values for local development.
     Found in your project at:  https://app.supabase.com/project/<ID>/settings/api
 */
-const SUPABASE_URL  = import.meta.env?.SUPABASE_URL  || 'https://tsrfpkccxkysbzdgbero.supabase.co';
-const SUPABASE_ANON = import.meta.env?.SUPABASE_ANON || 'sb_publishable_Pkirb2u25qSiPv-OE5u0fw_m9gQBcq-';
+const SUPABASE_URL  = import.meta.env?.SUPABASE_URL
+const SUPABASE_ANON = import.meta.env?.SUPABASE_ANON
 
 // Create the Supabase client
 const supabase = window.__supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
