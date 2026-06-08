@@ -1,0 +1,131 @@
+-- ───────────────────────────────────────────────────────────────────────
+-- import_sprints.sql
+-- Supabase / PostgreSQL import from js/data.json  (weekly sprint data)
+--
+-- Usage (psql):
+--   psql -U postgres -d <database> -f import_sprints.sql
+--
+-- Usage (Supabase dashboard):
+--   Data Editor → SQL Editor → paste this file → Run
+-- ───────────────────────────────────────────────────────────────────────
+
+-- 1. Ensure public schema exists (default in Supabase)
+CREATE SCHEMA IF NOT EXISTS public;
+
+-- 2. Drop tables in reverse-dependency order (tags first) so re-runs are safe
+DROP TABLE IF EXISTS public.sprint_tags CASCADE;
+DROP TABLE IF EXISTS public.sprints CASCADE;
+
+-- 3. Create tables ──────────────────────────────────────────────────────
+
+CREATE TABLE public.sprints (
+    id          INTEGER PRIMARY KEY,
+    title       TEXT    NOT NULL,
+    date        TEXT    NOT NULL,  -- stored as "DD-MM-YYYY" to match source
+    went_well   TEXT,
+    not_well    TEXT,
+    can_improve TEXT,
+    next_sprint TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE public.sprint_tags (
+    id        INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    sprint_id INTEGER NOT NULL REFERENCES public.sprints (id) ON DELETE CASCADE,
+    tag       TEXT    NOT NULL
+);
+
+-- 4. Indexes for common queries
+CREATE INDEX IF NOT EXISTS idx_sprint_tags_sprint_id
+    ON public.sprint_tags (sprint_id);
+CREATE INDEX IF NOT EXISTS idx_sprint_tags_tag
+    ON public.sprint_tags (tag);
+CREATE INDEX IF NOT EXISTS idx_sprints_date
+    ON public.sprints (date);
+
+-- 5. Insert sprint records ──────────────────────────────────────────────
+
+INSERT INTO public.sprints (id, title, date, went_well, not_well, can_improve, next_sprint) VALUES
+(1, 'Week 01', '08-05-2026',
+    'The aspects of the project which went well this week has the been the development of the problem statement after some informal interviews with my friends, as they helped me figure what to base the project on.',
+    'Deciding what topic to focus on was an element that did not go particularly well as I struggle to figure out a problem that I was experiencing that did not already have a solution.',
+    'Something that I had learnt was that if you are unsure of something the best thing to do is to ask someone else, since two heads are better than one. Asking my friends about whether or not they have potential problems in their day to day lives that they did not have an immediate solution for helped me decide the topic for this brief',
+    'Going forward I will definitely be making use of the resources around me, particularly my peers as that has been helpful for me in what is arguably the most critical stage of the project.'),
+
+(2, 'Week 02', '15-05-2026',
+    'The interviews with the potential demographics went well, with almost all participants agreeing that they face the issues addressed in the problem statement suggesting that there is indeed a demographic for the proposed solution.',
+    'Creating the WIP slideshow was probably the only part of this week that did not go well, I was not too sure how I wanted to layout or design my slides as well as how much information I wanted to include in the presentation.',
+    'An aspect that I could improve on would be organising my thoughts and documenting them into FigJam, a lot of my thoughts and processes are still sitting in my head and in random markdown files on my computers which made it difficult to work between my two computers without doubling up on work.',
+    'I will be organising all my thoughts into just one place and updating my FigJam more regularly as it is still quite barren, my preference is to work with markdown files but I will need to switch or find a way to integrate that into my FigJam going forward.'),
+
+(3, 'Week 03', '24-05-2026',
+    'The aspect of the project that went well this week would be the (Mid-Fi?) prototyping of the app onboarding as well as the home page. My initial planning done in the previous weeks has definitely helped streamline the prototyping process as I could always refer back to the plan in case I was not sure how to implement something. Another aspect that went well was the documentation process of the prototyping into the FigJam.',
+    'Keeping a consistent work schedule was an aspect that did not go as well, a lot of the progress that I made on the project on the came in spontaneous bursts as opposed to consistent daily effort.',
+    'Possibly keeping a more consistent work schedule would be something to work on in the coming weeks, apart from that everything else seems to be on track.',
+    'For the next sprint I will be working on turning the Mid-Fi prototype into a Hi-Fi prototype as well as the pitch presentation, looking at making a higher quality presentation for the pitch as well.'),
+
+(4, 'Week 04', '29-05-2026',
+    'An aspect that went well for the week was production of the pitch presentation due to heaps of planning done in the weeks prior with all the documentation compiled into markdown files in a directory. This really helped to streamline the process of writing the content of the slides as all I had to do was just reference the information.',
+    'Something that I struggled with this week was getting anything other than the presentation done in regards to the whole assignment, I basically spent the entire week creating and refining the presentation. I wanted to try something new this time with the presentation and create the slides using html, css and js, to apply some of the learning done in class, but this became a huge time sink.',
+    'Possibly being a bit smarter with where I place my time in regards to the scope of the project would have been something that I could have improved on as I think I allowed a fun little side project turn into something bigger than it should have been.',
+    'For the next sprint I would like to work on diversifying the parts of the project that I work on instead of hyperfixiating on just one part of the brief.');
+
+-- 6. Insert tags (one row per tag per sprint) ────────────────────────────
+
+INSERT INTO public.sprint_tags (sprint_id, tag) VALUES
+(1, 'Research'),
+(1, 'Development'),
+(1, 'Ideating'),
+
+(2, 'Research'),
+(2, 'Interviews'),
+(2, 'Presentation'),
+
+(3, 'Prototyping'),
+(3, 'Documentation'),
+(3, 'Testing'),
+
+(4, 'Presentation'),
+(4, 'Research'),
+(4, 'Development');
+
+-- 7. Row Level Security ─────────────────────────────────────────────────
+-- Supabase enables RLS by default on new projects. These policies let
+-- any authenticated user read all sprints (public assignment data).
+-- Adjust or remove if your project uses stricter auth.
+
+ALTER TABLE public.sprints  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sprint_tags ENABLE ROW LEVEL SECURITY;
+
+-- Allow authenticated users to read all rows
+CREATE POLICY "sprints_select_all"
+    ON public.sprints  FOR SELECT  USING (true);
+
+CREATE POLICY "sprint_tags_select_all"
+    ON public.sprint_tags FOR SELECT USING (true);
+
+-- Allow inserts from anyone (public blog — update with stricter policy if needed)
+-- First drop the old auth-restricted insert policies (if they exist)
+DROP POLICY IF EXISTS "sprints_insert_auth" ON public.sprints;
+DROP POLICY IF EXISTS "sprint_tags_insert_auth" ON public.sprint_tags;
+
+CREATE POLICY "sprints_insert_any"
+    ON public.sprints  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "sprint_tags_insert_any"
+    ON public.sprint_tags FOR INSERT WITH CHECK (true);
+
+-- Allow authenticated users to update their own rows
+CREATE POLICY "sprints_update_auth"
+    ON public.sprints  FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "sprint_tags_update_auth"
+    ON public.sprint_tags FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+-- Allow authenticated users to delete
+CREATE POLICY "sprints_delete_auth"
+    ON public.sprints  FOR DELETE USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "sprint_tags_delete_auth"
+    ON public.sprint_tags FOR DELETE USING (auth.uid() IS NOT NULL);
