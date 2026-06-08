@@ -108,27 +108,24 @@ CREATE POLICY "sprints_select_all"
 CREATE POLICY "sprint_tags_select_all"
     ON public.sprint_tags FOR SELECT USING (true);
 
--- Allow inserts from anyone (public blog — update with stricter policy if needed)
--- First drop the old auth-restricted insert policies (if they exist)
-DROP POLICY IF EXISTS "sprints_insert_auth" ON public.sprints;
-DROP POLICY IF EXISTS "sprint_tags_insert_auth" ON public.sprint_tags;
+-- Authenticated-only write policies
+-- Seed scripts run as the DB owner and bypass RLS, so re-running this file
+-- via the SQL Editor will still work for the INSERT data rows.
 
-CREATE POLICY "sprints_insert_any"
-    ON public.sprints  FOR INSERT WITH CHECK (true);
+CREATE POLICY "sprints_insert_auth"
+    ON public.sprints  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
-CREATE POLICY "sprint_tags_insert_any"
-    ON public.sprint_tags FOR INSERT WITH CHECK (true);
+CREATE POLICY "sprint_tags_insert_auth"
+    ON public.sprint_tags FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
--- Allow anyone to update (matches the open insert policy above)
-CREATE POLICY "sprints_update_any"
-    ON public.sprints  FOR UPDATE USING (true);
+CREATE POLICY "sprints_update_auth"
+    ON public.sprints  FOR UPDATE USING (auth.uid() IS NOT NULL);
 
-CREATE POLICY "sprint_tags_update_any"
-    ON public.sprint_tags FOR UPDATE USING (true);
+CREATE POLICY "sprint_tags_update_auth"
+    ON public.sprint_tags FOR UPDATE USING (auth.uid() IS NOT NULL);
 
--- Allow anyone to delete (matches the open insert policy above)
-CREATE POLICY "sprints_delete_any"
-    ON public.sprints  FOR DELETE USING (true);
+CREATE POLICY "sprints_delete_auth"
+    ON public.sprints  FOR DELETE USING (auth.uid() IS NOT NULL);
 
-CREATE POLICY "sprint_tags_delete_any"
-    ON public.sprint_tags FOR DELETE USING (true);
+CREATE POLICY "sprint_tags_delete_auth"
+    ON public.sprint_tags FOR DELETE USING (auth.uid() IS NOT NULL);

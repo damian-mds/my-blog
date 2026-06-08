@@ -1,5 +1,7 @@
-/*  scripts.js  —  Supabase version (dev branch)
+/*  scripts.js  —  Supabase version (auth branch)
     Full CRUD: Create, Read, Update, Delete blog posts.
+    Authenticated users can create, edit, and delete.
+    Unauthenticated visitors can only read.
 
     TODO: Replace these two values with your own Supabase project credentials.
     Found in your project at:  https://app.supabase.com/project/<ID>/settings/api
@@ -10,6 +12,52 @@ const SUPABASE_ANON = 'sb_publishable_Pkirb2u25qSiPv-OE5u0fw_m9gQBcq-';
 // Create the Supabase client
 const supabase = window.__supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
+// ── Auth state ────────────────────────────────────────────────────────────
+
+let currentUser = null;  // current signed-in user (or null)
+let isSignUpMode  = false; // whether the auth modal is in "Sign Up" mode
+
+// Listen for auth changes (persisted across page loads via Supabase storage)
+supabase.auth.onAuthStateChange((_event, session) => {
+    currentUser = session?.user ?? null;
+    updateAuthUI();
+});
+
+// Check for an existing session on page load
+(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    currentUser = session?.user ?? null;
+    updateAuthUI();
+})();
+
+// Update header buttons + post action buttons based on auth state
+function updateAuthUI() {
+    const authBtns     = document.getElementById('auth-actions');
+    const signedInBtns = document.getElementById('signed-in-actions');
+    const newPostBtn   = document.getElementById('new-post-btn');
+    const userEmail    = document.getElementById('user-email');
+
+    if (currentUser) {
+        authBtns.style.display = 'none';
+        signedInBtns.style.display = 'flex';
+        userEmail.textContent = currentUser.email;
+        // Show the "+ New Post" button when logged in
+        newPostBtn.classList.remove('auth-hidden');
+        // Show Edit / Delete buttons on posts
+        document.querySelectorAll('.post-actions').forEach(el => {
+            el.classList.remove('auth-hidden');
+        });
+    } else {
+        authBtns.style.display = 'flex';
+        signedInBtns.style.display = 'none';
+        newPostBtn.classList.add('auth-hidden');
+        // Hide Edit / Delete buttons on posts
+        document.querySelectorAll('.post-actions').forEach(el => {
+            el.classList.add('auth-hidden');
+        });
+    }
+}
+
 // ── Toast notification ─────────────────────────────────────────────────
 
 function showToast(message, isError = false) {
@@ -19,7 +67,83 @@ function showToast(message, isError = false) {
     setTimeout(() => { toast.className = 'toast'; }, 3000);
 }
 
-// ── Load & render posts (Read) ─────────────────────────────────────────
+// ── Auth Modal helpers ────────────────────────────────────────────────────
+
+function showSignInModal() {
+    isSignUpMode = false;
+    document.getElementById('auth-modal-title').textContent = 'Sign In';
+    document.getElementById('auth-submit-btn').textContent = 'Sign In';
+    document.getElementById('auth-toggle-link').textContent = "Don't have an account? Sign Up";
+    document.getElementById('auth-email').value = '';
+    document.getElementById('auth-password').value = '';
+    document.getElementById('auth-modal').classList.add('active');
+}
+
+function closeAuthModal() {
+    document.getElementById('auth-modal').classList.remove('active');
+}
+
+function toggleAuthMode() {
+    isSignUpMode = !isSignUpMode;
+    const title     = document.getElementById('auth-modal-title');
+    const submitBtn = document.getElementById('auth-submit-btn');
+    const link      = document.getElementById('auth-toggle-link');
+    if (isSignUpMode) {
+        title.textContent = 'Create Account';
+        submitBtn.textContent = 'Sign Up';
+        link.textContent = "Already have an account? Sign In";
+    } else {
+        title.textContent = 'Sign In';
+        submitBtn.textContent = 'Sign In';
+        link.textContent = "Don't have an account? Sign Up";
+    }
+}
+
+// Handle sign-in / sign-up form submission
+async function handleAuthSubmit(e) {
+    e.preventDefault();
+    const email    = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+
+    let result;
+    if (isSignUpMode) {
+        result = await supabase.auth.signUp({ email, password });
+    } else {
+        result = await supabase.auth.signInWithPassword({ email, password });
+    }
+
+    if (result.error) {
+        showToast(result.error.message, true);
+        return;
+    }
+
+    closeAuthModal();
+
+    if (isSignUpMode) {
+        if (result.data?.user?.identities?.length === 0) {
+            showToast('An account with this email already exists.', true);
+        } else {
+            showToast('Account created! You can now create and edit posts.');
+        }
+    } else {
+        showToast('Signed in successfully!');
+    }
+}
+
+// Handle sign out
+async function handleSignOut() {
+    await supabase.auth.signOut();
+    showToast('Signed out.');
+}
+
+// Expose auth functions to inline HTML onclick handlers
+window.showSignInModal   = showSignInModal;
+window.closeAuthModal    = closeAuthModal;
+window.toggleAuthMode    = toggleAuthMode;
+window.handleAuthSubmit  = handleAuthSubmit;
+window.handleSignOut     = handleSignOut;
+
+// ── Load & render posts (Read) ──────────────────────────────────────────
 
 async function loadPosts() {
     const postsContainer = document.querySelector('.blog-posts');
@@ -73,7 +197,9 @@ function generateBlogPosts(posts) {
 
     if (posts.length === 0) {
         postsContainer.innerHTML =
-            '<p style="text-align:center;color:#666;">No posts yet. Click "+ New Post" above.</p>';
+            '<p style="text-align:center;color:#666;">No posts yet.' +
+            (currentUser ? ' Click "+ New Post" above.' : ' Sign in to create your first post.') +
+            '</p>';
         return;
     }
 
@@ -81,7 +207,7 @@ function generateBlogPosts(posts) {
         const postElement = document.createElement('article');
         postElement.className = 'post';
 
-        // Action buttons (edit / delete)
+        // Action buttons (edit / delete) — hidden when not authenticated
         const actionsHtml = `
             <div class="post-actions">
                 <button onclick="showEditForm(${post.id})" title="Edit this post">Edit</button>
@@ -123,7 +249,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// ── Modal helpers ──────────────────────────────────────────────────────
+// ── Modal helpers (Create/Edit) ──────────────────────────────────────────
 
 function openModal() {
     document.getElementById('modal').classList.add('active');
@@ -150,6 +276,10 @@ function clearForm() {
 // ── Create (C) ─────────────────────────────────────────────────────────
 
 function showCreateForm() {
+    if (!currentUser) {
+        showToast('Please sign in to create a post.', true);
+        return;
+    }
     clearForm();
     document.getElementById('modal-title').textContent = 'New Post';
     document.getElementById('save-btn').textContent = 'Save Post';
@@ -160,6 +290,11 @@ function showCreateForm() {
 // ── Edit (U) ───────────────────────────────────────────────────────────
 
 async function showEditForm(sprintId) {
+    if (!currentUser) {
+        showToast('Please sign in to edit posts.', true);
+        return;
+    }
+
     // Fetch the sprint
     const { data: sprint, error } = await supabase
         .from('sprints')
@@ -200,6 +335,12 @@ async function showEditForm(sprintId) {
 // ── Save (Create or Update) ────────────────────────────────────────────
 
 async function savePost(sprintId, title, date, wentWell, notWell, canImprove, nextSprint, tags) {
+    // Auth check — should already be gated by UI, but belt-and-suspenders
+    if (!currentUser) {
+        showToast('Please sign in to save posts.', true);
+        return;
+    }
+
     // Insert or update the sprint row
     const sprintData = { title, date, went_well: wentWell, not_well: notWell, can_improve: canImprove, next_sprint: nextSprint };
 
@@ -276,6 +417,11 @@ function handleFormSubmit(e) {
 // ── Delete (D) ─────────────────────────────────────────────────────────
 
 async function deletePost(sprintId) {
+    if (!currentUser) {
+        showToast('Please sign in to delete posts.', true);
+        return;
+    }
+
     if (!confirm('Delete this post? This cannot be undone.')) return;
 
     const { error } = await supabase
@@ -293,22 +439,25 @@ async function deletePost(sprintId) {
     loadPosts();
 }
 
-// Close modal when clicking outside
-document.getElementById('modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
+// Close auth modal when clicking outside
+document.getElementById('auth-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeAuthModal();
 });
 
 // Close modal with Escape key
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') {
+        closeModal();
+        closeAuthModal();
+    }
 });
 
 // Expose CRUD functions globally for inline HTML onclick handlers
-window.showCreateForm = showCreateForm;
-window.showEditForm = showEditForm;
-window.deletePost = deletePost;
+window.showCreateForm  = showCreateForm;
+window.showEditForm    = showEditForm;
+window.deletePost      = deletePost;
 window.handleFormSubmit = handleFormSubmit;
-window.closeModal = closeModal;
+window.closeModal      = closeModal;
 
 // ── Start ──────────────────────────────────────────────────────────────
 loadPosts();
